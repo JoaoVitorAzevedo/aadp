@@ -2,7 +2,7 @@
 :- [listas]. % importa regras de lista
 
 solucao_bl(Inicial,Solucao) :-
-  bl([[Inicial]],Solucao).
+  bl([[Inicial]],Solucao),writeln(Solucao).
 
 bl([[Estado|Caminho]|_],[Estado|Caminho]) :-
   meta(Estado).
@@ -18,4 +18,7 @@ estende([Estado|Caminho],ListaSucessores) :-
     [Sucessor,Estado|Caminho],
     (s(Estado,Sucessor),not(pertence(Sucessor,[Estado|Caminho]))),
     ListaSucessores),!.
+
+
+
 

@@ -3,35 +3,46 @@
 :- [busca_profundidade].
 :- [busca_largura].
 
-% verificando se é adjacente
-adjacente(p(X,Y), p(FX, FY)) :-
-    (   FX is X - 1;
-    FX = X;
-    FX is X +1),
-    (   FY is Y - 1;
-    FY = Y;
-    FY is Y +1).
+:- [caso_0].
+%:- [caso_1].   
+%:- [caso_2].    %% mudar para  10x10
 
 % verificando limites
-esta_no_mapa(p(X,Y)) :-
-    X > 0,
-    Y > 0,
-    X < 11,
-    Y < 6.
+fora_do_mapa(p(X,Y)) :-
+  X = 0;
+  Y = 0;
+  X = 11;
+  Y = 6.
+
+pode_passar(_,Pos2) :-
+  not(parede(Pos2)),
+  not(fora_do_mapa(Pos2)).
 
 % pegando sujeira
-s([p(X, Y), Sacola, Sujeiras], [p(SX, SY), Sacola2, Sujeiras2]) :-
-    adjacente(p(X, Y),p(SX, SY)),
-    pertence(p(SX, SY),Sujeiras),
-    retirar_elemento(p(SX, SY),Sujeiras,Sujeiras2),
-    Sacola2 = Sacola + 1,
-    esta_no_mapa(p(SX, SY)).
-    
-    
+s([Pos, Sacola, Sujeiras], [Pos, Sacola2, Sujeiras2]) :-  	%estado (P,Sa,Su) vem antes de (P,Sa2,Su2) se
+    pertence(Pos,Sujeiras),										                 %Essa posicao pertence à lista de sujeiras &
+    retirar_elemento(Pos,Sujeiras,Sujeiras2),					         %Sujeiras 2 é sujeira sem o 'elemento' Pos &
+    Sacola < 2,													                       % A sacola não está cheia 				   &
+    Sacola2 is Sacola + 1, writeln('limpou sujeira'). 			       				
 
-s([p(X, Y), _, _], [p(SX, SY), _, _]) :- 
-    esta_no_mapa(p(SX, SY)),
-    adjacente(p(X,Y), p(SX, SY)).
+% esvaziando sacola na lixeira
+s([Pos,Sacola,Sujeiras],[Pos,Sacola2,Sujeiras]) :-			     %(P,Sa,Su) vem antes de (P,Sa2,Su2) se
+  lixeira(Pos),													                        %há uma lixeira em P &
+  Sacola > 0,												                          	%Tem lixo na sacola  &
+  Sacola2 is 0, writeln('esvaziou sacola').				           		%A nova sacola está vazia
 
-meta([p(_, _), _, []]).
-% buscas 2 sujeiras - carregador - guarda a ultima sujeira
+% andando em X 
+s([p(X,Y), Sacola, Sujeiras], [p(SX,Y), Sacola, Sujeiras]) :-     % (XY,Sa,Su) vem antes de (SXY,Sa,Su) se
+    (SX is X + 1 ; SX is X - 1),									                   % o x novo está à um passo do antigo, seja direita ou esquerda
+    pode_passar(p(X,Y),p(SX,Y)).									                   % X -> SX é navegável
+
+%subindo no elevador
+s([p(X,Y), Sacola, Sujeiras],[p(X,SY),Sacola,Sujeiras]) :-		  %Andar no Y ( apenas no elevador) se
+  elevador(X),													                         	%Há um elevador no X atual
+  (SY is Y + 1; SY is Y - 1),										                  %o Y novo está há um passo do antigo, subida ou descida
+  not(fora_do_mapa(p(X,SY))), writeln('elevador').		          	%a nova posição não está fora do mapa
+
+meta([Pos, 0, Lixos]) :-										      %A meta é um estado onde o robo está na powerStation,
+  powerstation(Pos),												           %e a lista de lixos está vazia
+  Lixos = [], writeln('pronto').
+
